@@ -14,14 +14,14 @@ typedef struct node {
 	int	nData;
 	unsigned char lThread : 1;
 	unsigned char rThread : 1;
-	struct node* lChild;
-	struct node* rChild;
-}	Node, * NodePtr, * TreePtr;
+	struct node *lChild;
+	struct node *rChild;
+}	Node, *NodePtr, *TreePtr;
 
 int  MakeTree(TreePtr& pTree, int nData);
-void InorderTrvs(TreePtr pTree, NodePtr*& sOrder);
-void MakeThreadTree(NodePtr* inorder);
-void ThreadTrvs(TreePtr pHead, char* sOrder);
+void InorderTrvs(TreePtr pTree, NodePtr* &sOrder);
+void MakeThreadTree(NodePtr *inorder);
+void ThreadTrvs(TreePtr pHead, char *sOrder);
 NodePtr Successor(NodePtr pNode);
 void PrintRootLeftRght(TreePtr pTree);
 void FreeTree(TreePtr pTree);
@@ -45,7 +45,7 @@ void main()
 		PrintRootLeftRght(pHead);
 		NodePtr arrNode[NoNODE + 2];
 		arrNode[0] = arrNode[NoNODE + 1] = pHead;
-		NodePtr* parNode = arrNode + 1;
+		NodePtr *parNode = arrNode + 1;
 		InorderTrvs(pHead->lChild, parNode);
 		MakeThreadTree(arrNode);
 		char sOrder[5 * NoNODE];
@@ -77,7 +77,7 @@ int MakeTree(TreePtr& pTree, int nData)
 	return MakeTree(rand() % 2 ? pTree->lChild : pTree->rChild, nData);
 }
 
-void InorderTrvs(TreePtr pTree, NodePtr*& parNode)
+void InorderTrvs(TreePtr pTree, NodePtr* &parNode)
 {	// inorder로 순회하여 그 결과를 sOrder에 출력한다.
 	if (pTree) {
 		InorderTrvs(pTree->lChild, parNode);
@@ -86,7 +86,7 @@ void InorderTrvs(TreePtr pTree, NodePtr*& parNode)
 	}
 }
 
-void MakeThreadTree(NodePtr* inorder)
+void MakeThreadTree(NodePtr *inorder)
 {
 	for (int i = 1; i <= NoNODE; i++) {
 		NodePtr pNode = inorder[i];
@@ -101,28 +101,23 @@ void MakeThreadTree(NodePtr* inorder)
 	}
 }
 
-void ThreadTrvs(TreePtr pHead, char* sOrder)
+void ThreadTrvs(TreePtr pHead, char *sOrder)
 {	// 스레드 이진 트리를 inorder로 순회하여 그 결과를 sOrder에 출력한다.
-	/***
-	pNode에 pHead를 저장한다
+	NodePtr pNode = pHead;
 	while (1) {
-		pNode에 pNode Successor를 저장하고 pHead와 같으면
+		if ((pNode = Successor(pNode)) == pHead)
 			break;
-		sOrder에 "%-3d" 형식으로 pNode->nData를 저장하고 sOrder를 3 증가한다
+		sOrder += sprintf(sOrder, "%-3d", pNode->nData);
 	}
-	***/
 }
 
 NodePtr Successor(NodePtr pTree)
 {	// 스레드 이진 트리에서 다음 노드를 반환한다
-	/***
-	pNode에 pTree의 rChild를 저장한다
-	pTree의 오른 자식이 존재하면
-		pNode의 왼쪽 자식이 존재할 동안
-			pNode는 왼쪽 자식을 따라 내려간다
-	pNode를 반환한다
-	***/
-	return NULL;
+	NodePtr pNode = pTree->rChild;
+	if (pTree->rThread == 0)
+		while (pNode->lThread == 0)
+			pNode = pNode->lChild;
+	return pNode;
 }
 
 void PrintRootLeftRght(TreePtr pTree)
