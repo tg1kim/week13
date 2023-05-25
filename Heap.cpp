@@ -1,9 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#pragma warning(disable: 4326 4996 6001 6031)
 
 #define MAX_ELEMENTS	100
-#pragma warning (disable: 4996)
 
 typedef struct {
 	int nData;
@@ -42,16 +42,20 @@ void main()
 
 void InsertHeap(Element heap[], Element& anItem, int& nCtr)
 {
+	/***
 	nNdx에 nCtr을 1 증가한 후 저장한다;
 	while (nNdx가 1보다 크고  anItem의 데이커가 [nNdx / 2]의 데이터보다 크다) {
 		부모의 데이터를 자식으로 내린다
 		nNdx를 한 레벨 위로 올린다
 	}
 	[nNdx]에 anItem을 저장한다
+	***/
 }
 
 Element DeleteHeap(Element heap[], int& nCtr)
 {
+	Element anItem;
+	/***
 	anItem에 루트 데이터를 저장한다
 	lastItem에 마지막 데이터를 저장하고 nCtr을 1 감소한다
 	parent에 1을, child에 2를 저장한다
@@ -66,4 +70,6 @@ Element DeleteHeap(Element heap[], int& nCtr)
 	}
 	[parent]에 lastItem을 저장한다
 	anItem을 반환한다
+	***/
+	return anItem;
 }
