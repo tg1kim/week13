@@ -3,28 +3,29 @@
 #include <time.h>
 #pragma warning(disable: 4326 4996 6001 6031 28182)
 
-#define DebugON			// define for testing
+//#define DebugON			// define for testing
 #ifdef DebugON
-#define NoNODE	10
+#define NoNODE	7
 #else
-#define NoNODE	15
+#define NoNODE	23
 #endif
 
 typedef struct node {
 	int	nData;
 	unsigned char lThread : 1;
 	unsigned char rThread : 1;
-	struct node* lChild;
-	struct node* rChild;
-}	Node, * NodePtr, * TreePtr;
+	struct node *lChild;
+	struct node *rChild;
+}	Node, *NodePtr, *TreePtr;
 
 int  MakeTree(TreePtr& pTree, int nData);
-void InorderTrvs(TreePtr pTree, NodePtr*& sOrder);
-void MakeThreadTree(NodePtr* inorder);
-void ThreadTrvs(TreePtr pHead, char* sOrder);
+void InorderTrvs(TreePtr pTree, NodePtr* &sOrder);
+void MakeThreadTree(NodePtr *inorder);
+void ThreadTrvs(TreePtr pHead, char *sOrder);
 NodePtr Successor(NodePtr pNode);
-void PrintRootLeftRght(TreePtr pTree);
 void FreeTree(TreePtr pTree);
+void ShowTree(TreePtr pTree);
+int  CountNode(TreePtr pTree);
 
 void main()
 {
@@ -41,16 +42,17 @@ void main()
 		for (int i = 1; i <= NoNODE; i++)
 			if (MakeTree(pHead->lChild, i) == false)
 				return;
-		printf("[D, L, R]\n---------\n");
-		PrintRootLeftRght(pHead);
+		ShowTree(pHead->lChild);
+		putchar('\n');
+
 		NodePtr arrNode[NoNODE + 2];
 		arrNode[0] = arrNode[NoNODE + 1] = pHead;
-		NodePtr* parNode = arrNode + 1;
+		NodePtr *parNode = arrNode + 1;
 		InorderTrvs(pHead->lChild, parNode);
 		MakeThreadTree(arrNode);
 		char sOrder[5 * NoNODE];
 		ThreadTrvs(pHead, sOrder);
-		printf("Thread Trvs: %s\n", sOrder);
+		printf("Thread Trvs:%s\n", sOrder);
 		// deallocate tree
 		pHead->rChild = NULL;
 		FreeTree(pHead);
@@ -67,14 +69,18 @@ int MakeTree(TreePtr& pTree, int nData)
 {
 	if (pTree == NULL) {
 		pTree = (NodePtr)malloc(sizeof(Node));
-		if (pTree == NULL)
-			return false;
-		pTree->nData = nData;
-		pTree->lThread = pTree->rThread = 0;
-		pTree->lChild = pTree->rChild = NULL;
-		return true;
+		if (pTree) {
+			pTree->nData = nData;
+			pTree->lThread = pTree->rThread = 0;
+			pTree->lChild = pTree->rChild = NULL;
+		}
+		return pTree != NULL;
 	}
-	return MakeTree(rand() % 2 ? pTree->lChild : pTree->rChild, nData);
+	int nlCtr = CountNode(pTree->lChild), nrCtr = CountNode(pTree->rChild);
+	int nChild = nlCtr == nrCtr ? rand() % 2 : nlCtr > nrCtr;
+	if (nChild == 0)
+		return MakeTree(pTree->lChild, nData);
+	return MakeTree(pTree->rChild, nData);
 }
 
 void InorderTrvs(TreePtr pTree, NodePtr*& parNode)
@@ -125,25 +131,6 @@ NodePtr Successor(NodePtr pTree)
 	return NULL;
 }
 
-void PrintRootLeftRght(TreePtr pTree)
-{	// 트리의 모든 노드에 대하여 [D, L, R] 형식으로 출력한다(NULL은 -)
-	if (pTree) {
-		TreePtr plTree = pTree->lThread ? NULL : pTree->lChild;
-		TreePtr prTree = pTree->rThread ? NULL : pTree->rChild;
-		int nData = pTree->nData;
-		if (pTree == prTree) {		// head node
-			nData = 0;
-			prTree = NULL;
-		}
-		nData ? printf("[%d,", nData) : printf("[?,");
-		plTree ? printf(" %d,", plTree->nData) : printf(" -,");
-		prTree ? printf(" %d", prTree->nData) : printf(" -");
-		printf("]\n");
-		PrintRootLeftRght(plTree);
-		PrintRootLeftRght(prTree);
-	}
-}
-
 void FreeTree(TreePtr pTree)
 {	// 이진트리의 모든 노드를 되돌려준다.
 	if (pTree) {
@@ -153,4 +140,61 @@ void FreeTree(TreePtr pTree)
 			FreeTree(pTree->rChild);
 		free(pTree);
 	}
+}
+
+#define	NodeWIDTH	2
+#define	NodeGAP		1
+
+void PrintGap(int nCtr)
+{
+	for (int i = 0; i < nCtr; i++)
+		putchar(0x20);
+}
+
+int TreeHeight(TreePtr pTree)
+{
+	int nHeight = 0;
+	if (pTree) {
+		int nlHeight = TreeHeight(pTree->lChild);
+		int nrHeight = TreeHeight(pTree->rChild);
+		nHeight = (nlHeight > nrHeight ? nlHeight : nrHeight) + 1;
+	}
+	return nHeight;
+}
+
+void ShowTree(TreePtr pTree)
+{
+	if (pTree == NULL)
+		return;
+	TreePtr arNode1[256], arNode2[256] = { pTree, NULL };
+	int nHeight = TreeHeight(pTree);
+	int nMaxLvlNode = 1;
+	for (int i = 1; i < nHeight; i++)
+		nMaxLvlNode *= 2;
+	int nWidth = (NodeWIDTH + NodeGAP) * nMaxLvlNode;
+	for (int nLevel = 1, nCtr = 1; nLevel <= nHeight; nLevel++, nCtr *= 2) {
+		for (int i = 0; i < nCtr; i++)
+			arNode1[i] = arNode2[i];
+		float fAvgGap = (float)(nWidth - nCtr * NodeWIDTH) / nCtr;
+		for (int i = 0, nGapSum = 0; i < nCtr; i++) {
+			int nGapNow = (int)(fAvgGap / 2 + (NodeWIDTH + fAvgGap) * i);
+			PrintGap(nGapNow - nGapSum);
+			if (arNode1[i])
+				printf("%02d", arNode1[i]->nData);
+			else
+				PrintGap(NodeWIDTH);
+			nGapSum = nGapNow + NodeWIDTH;
+			arNode2[2 * i] = arNode1[i] ? arNode1[i]->lChild : NULL;
+			arNode2[2 * i + 1] = arNode1[i] ? arNode1[i]->rChild : NULL;
+		}
+		putchar('\n');
+	}
+}
+
+int CountNode(TreePtr pTree)
+{
+	int nCtr = 0;
+	if (pTree)
+		nCtr = CountNode(pTree->lChild) + CountNode(pTree->rChild) + 1;
+	return nCtr;
 }

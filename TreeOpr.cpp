@@ -28,6 +28,7 @@ void LevelOrder(TreePtr pTree);
 TreePtr CopyTree(TreePtr pTree);
 int EqualTree(TreePtr pTree, TreePtr pTree1);
 void SwapTree(TreePtr pTree);
+void ShowTree(TreePtr pTree);
 void FreeTree(TreePtr pTree);
 
 void main()
@@ -36,12 +37,20 @@ void main()
 	TreePtr pTree0 = NULL;
 	for (int i = 0; i < sizeof(sMonth) / sizeof(sMonth[0]); i++)
 		InsertNode(pTree0, sMonth[i]);
+	printf("[pTree0]\n");
+	ShowTree(pTree0);
+	putchar('\n');
 	char sCmnd[10];
 	TreePtr pTree1 = NULL;
 	while (1) {
 		printf("\n[i nrotulcqsx e] ? ");
 		gets_s(sCmnd);
-		switch (*sCmnd | 0x20) {
+		switch (*sCmnd) {
+		case '0':
+		case '1':
+			printf("[pTree%c]\n", *sCmnd);
+			ShowTree(*sCmnd == '0' ? pTree0 : pTree1);
+			break;
 		case 'i':
 			printf("Data ? ");
 			gets_s(sCmnd);
@@ -217,3 +226,51 @@ void FreeTree(TreePtr pTree)
 {
 }
 
+#define	NodeWIDTH	4
+#define	NodeGAP		1
+
+void PrintGap(int nCtr)
+{
+	for (int i = 0; i < nCtr; i++)
+		putchar(0x20);
+}
+
+int TreeHeight(TreePtr pTree)
+{
+	int nHeight = 0;
+	if (pTree) {
+		int nlHeight = TreeHeight(pTree->lChild);
+		int nrHeight = TreeHeight(pTree->rChild);
+		nHeight = (nlHeight > nrHeight ? nlHeight : nrHeight) + 1;
+	}
+	return nHeight;
+}
+
+void ShowTree(TreePtr pTree)
+{
+	if (pTree == NULL)
+		return;
+	TreePtr arNode1[256], arNode2[256] = { pTree, NULL };
+	int nHeight = TreeHeight(pTree);
+	int nMaxLvlNode = 1;
+	for (int i = 1; i < nHeight; i++)
+		nMaxLvlNode *= 2;
+	int nWidth = (NodeWIDTH + NodeGAP) * nMaxLvlNode;
+	for (int nLevel = 1, nCtr = 1; nLevel <= nHeight; nLevel++, nCtr *= 2) {
+		for (int i = 0; i < nCtr; i++)
+			arNode1[i] = arNode2[i];
+		float fAvgGap = (float)(nWidth - nCtr * NodeWIDTH) / nCtr;
+		for (int i = 0, nGapSum = 0; i < nCtr; i++) {
+			int nGapNow = (int)(fAvgGap / 2 + (NodeWIDTH + fAvgGap) * i);
+			PrintGap(nGapNow - nGapSum);
+			if (arNode1[i])
+				printf("%-4s", arNode1[i]->sData);
+			else
+				PrintGap(NodeWIDTH);
+			nGapSum = nGapNow + NodeWIDTH;
+			arNode2[2 * i] = arNode1[i] ? arNode1[i]->lChild : NULL;
+			arNode2[2 * i + 1] = arNode1[i] ? arNode1[i]->rChild : NULL;
+		}
+		putchar('\n');
+	}
+}

@@ -18,15 +18,16 @@ typedef struct node {
 	struct node *rChild;
 }	Node, *NodePtr, *TreePtr;
 
-int MakeTree(TreePtr& pTree, int nData);
-void PreorderTrvs(TreePtr pTree, CharPtr& sOrder);
-void InorderTrvs(TreePtr pTree, CharPtr& sOrder);
-void PostorderTrvs(TreePtr pTree, CharPtr& sOrder);
-TreePtr Tree4InPreorder(char* sInorder, char* sPreorder, int nCtr);
-TreePtr Tree4InPostorder(char* sInorder, char* sPostorder, int nCtr);
+int  MakeTree(TreePtr &pTree, int nData);
+void PreorderTrvs(TreePtr pTree, CharPtr &sOrder);
+void InorderTrvs(TreePtr pTree, CharPtr &sOrder);
+void PostorderTrvs(TreePtr pTree, CharPtr &sOrder);
+TreePtr Tree4InPreorder(char *sInorder, char *sPreorder, int nCtr);
+TreePtr Tree4InPostorder(char *sInorder, char *sPostorder, int nCtr);
 bool EqualTree(TreePtr pTree1, TreePtr pTree2);
 void FreeTree(TreePtr pTree);
-void PrintRootLeftRght(TreePtr pTree);
+void ShowTree(TreePtr pTree);
+int  CountNode(TreePtr pTree);
 
 void main()
 {
@@ -44,8 +45,7 @@ void main()
 		for (int i = 0; i < NoNODE; i++)
 			if (MakeTree(pTree, 'A' + i) == false)
 				return;
-		printf("[D, L, R]\n---------\n");
-		PrintRootLeftRght(pTree);
+		ShowTree(pTree);
 		putchar('\n');
 		pOrder = sPreorder;
 		PreorderTrvs(pTree, pOrder);
@@ -85,14 +85,9 @@ int MakeTree(TreePtr& pTree, int nData)
 		}
 		return (int)pTree;
 	}
-	int nChild;
-	if (pTree->lChild == NULL && pTree->rChild)
-		nChild = 0;
-	else if (pTree->lChild && pTree->rChild == NULL)
-		nChild = 1;
-	else
-		nChild = rand() % 2;
-	return MakeTree((nChild) ? pTree->rChild : pTree->lChild, nData);
+	int nlCtr = CountNode(pTree->lChild), nrCtr = CountNode(pTree->rChild);
+	int nChild = nlCtr == nrCtr ? rand() % 2 : (nrCtr + 1) / (nlCtr + 1);
+	return MakeTree(nChild ? pTree->lChild : pTree->rChild, nData);
 }
 
 void PreorderTrvs(TreePtr pTree, CharPtr& sOrder)
@@ -131,14 +126,59 @@ void FreeTree(TreePtr pTree)
 	}
 }
 
-void PrintRootLeftRght(TreePtr pTree)
-{	// 트리의 모든 노드에 대하여 [D, L, R] 형식으로 출력한다(NULL은 ^)
+int CountNode(TreePtr pTree)
+{
+	int nCtr = 0;
+	if (pTree)
+		nCtr = CountNode(pTree->lChild) + CountNode(pTree->rChild) + 1;
+	return nCtr;
+}
+
+#define	NodeWIDTH	1
+#define	NodeGAP		1
+
+void PrintGap(int nCtr)
+{
+	for (int i = 0; i < nCtr; i++)
+		putchar(0x20);
+}
+
+int TreeHeight(TreePtr pTree)
+{
+	int nHeight = 0;
 	if (pTree) {
-		printf("[%c, %c, %c]\n",
-			pTree->nData,
-			(pTree->lChild) ? pTree->lChild->nData : '^',
-			(pTree->rChild) ? pTree->rChild->nData : '^');
-		PrintRootLeftRght(pTree->lChild);
-		PrintRootLeftRght(pTree->rChild);
+		int nlHeight = TreeHeight(pTree->lChild);
+		int nrHeight = TreeHeight(pTree->rChild);
+		nHeight = (nlHeight > nrHeight ? nlHeight : nrHeight) + 1;
+	}
+	return nHeight;
+}
+
+void ShowTree(TreePtr pTree)
+{
+	if (pTree == NULL)
+		return;
+	TreePtr arNode1[256], arNode2[256] = { pTree, NULL };
+	int nHeight = TreeHeight(pTree);
+	int nMaxLvlNode = 1;
+	for (int i = 1; i < nHeight; i++)
+		nMaxLvlNode *= 2;
+	int nWidth = (NodeWIDTH + NodeGAP) * nMaxLvlNode;
+	for (int nLevel = 1, nCtr = 1; nLevel <= nHeight; nLevel++, nCtr *= 2) {
+		for (int i = 0; i < nCtr; i++)
+			arNode1[i] = arNode2[i];
+		float fAvgGap = (float)(nWidth - nCtr * NodeWIDTH) / nCtr;
+		for (int i = 0, nGapSum = 0; i < nCtr; i++) {
+			int nGapNow = (int)(fAvgGap / 2 + (NodeWIDTH + fAvgGap) * i);
+			PrintGap(nGapNow - nGapSum);
+			if (arNode1[i])
+				printf("%c", arNode1[i]->nData);
+			else
+				PrintGap(NodeWIDTH);
+			nGapSum = nGapNow + NodeWIDTH;
+			arNode2[2 * i] = arNode1[i] ? arNode1[i]->lChild : NULL;
+			arNode2[2 * i + 1] = arNode1[i] ? arNode1[i]->rChild : NULL;
+		}
+		putchar('\n');
 	}
 }

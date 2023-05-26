@@ -7,7 +7,7 @@
 #ifdef DebugON
 #define NoNODE	4
 #else
-#define NoNODE	15
+#define NoNODE	31
 #endif
 
 typedef char* CharPtr;
@@ -22,13 +22,15 @@ typedef struct node2 {
 	struct node2 *link;
 }	Node2, *Node2Ptr, Queue, *QueuePtr;
 
-int  MakeTree(TreePtr& pTree);
+int  MakeTree(TreePtr &pTree, int nData);
 void Numbering(TreePtr pTree, int nNo);
-void PreorderTrvs(TreePtr pTree, CharPtr& sOrder);
-void InorderTrvs(TreePtr pTree, CharPtr& sOrder);
-void PostorderTrvs(TreePtr pTree, CharPtr& sOrder);
-void LevelOrderTrvs(TreePtr pTree, char* sOrder);
+void PreorderTrvs(TreePtr pTree, CharPtr &sOrder);
+void InorderTrvs(TreePtr pTree, CharPtr &sOrder);
+void PostorderTrvs(TreePtr pTree, CharPtr &sOrder);
+void LevelOrderTrvs(TreePtr pTree, char *sOrder);
 void FreeTree(TreePtr pTree);
+void ShowTree(TreePtr pTree);
+int CountNode(TreePtr pTree);
 
 void main()
 {
@@ -37,15 +39,21 @@ void main()
 #else
 	srand((unsigned)time(NULL));
 #endif
-	char sTrvslOrder[5 * NoNODE], * pOrder;
+	char sTrvslOrder[5 * NoNODE], *pOrder;
 	while (1) {
 		TreePtr pTree = NULL;
-		for (int i = 0; i < NoNODE; i++) {
-			if (MakeTree(pTree) == false)
+		for (int i = 1; i <= NoNODE; i++) {
+			if (MakeTree(pTree, i) == false)
 				return;
 		}
 		// Node numbering
+		printf("[After Making]\n");
+		ShowTree(pTree);
+		putchar('\n');
 		Numbering(pTree, 1);
+		printf("[After Numbering]\n");
+		ShowTree(pTree);
+		putchar('\n');
 		// level order
 		LevelOrderTrvs(pTree, sTrvslOrder);
 		printf("Level order: %s\n", sTrvslOrder);
@@ -72,16 +80,20 @@ void main()
 	}
 }
 
-int MakeTree(TreePtr& pTree)
+int MakeTree(TreePtr& pTree, int nData)
 {
 	if (pTree == NULL) {
 		pTree = (Node1Ptr)malloc(sizeof(Node1));
 		if (pTree == NULL)
 			return false;
+		pTree->nData = nData;
 		pTree->lChild = pTree->rChild = NULL;
 		return true;
 	}
-	return MakeTree((rand() % 2) ? pTree->lChild : pTree->rChild);
+	int nlCtr = CountNode(pTree->lChild), nrCtr = CountNode(pTree->rChild);
+	int nChild = nlCtr == nrCtr ? rand() % 2 : nlCtr > nrCtr;
+	return nChild ?
+		MakeTree(pTree->rChild, nData) : MakeTree(pTree->lChild, nData);
 }
 
 void Numbering(TreePtr pTree, int nNo)
@@ -154,4 +166,61 @@ void FreeTree(TreePtr pTree)
 		FreeTree(pTree->rChild);
 		free(pTree);
 	}
+}
+
+#define	NodeWIDTH	2
+#define	NodeGAP		1
+
+void PrintGap(int nCtr)
+{
+	for (int i = 0; i < nCtr; i++)
+		putchar(0x20);
+}
+
+int TreeHeight(TreePtr pTree)
+{
+	int nHeight = 0;
+	if (pTree) {
+		int nlHeight = TreeHeight(pTree->lChild);
+		int nrHeight = TreeHeight(pTree->rChild);
+		nHeight = (nlHeight > nrHeight ? nlHeight : nrHeight) + 1;
+	}
+	return nHeight;
+}
+
+void ShowTree(TreePtr pTree)
+{
+	if (pTree == NULL)
+		return;
+	TreePtr arNode1[256], arNode2[256] = { pTree, NULL };
+	int nHeight = TreeHeight(pTree);
+	int nMaxLvlNode = 1;
+	for (int i = 1; i < nHeight; i++)
+		nMaxLvlNode *= 2;
+	int nWidth = (NodeWIDTH + NodeGAP) * nMaxLvlNode;
+	for (int nLevel = 1, nCtr = 1; nLevel <= nHeight; nLevel++, nCtr *= 2) {
+		for (int i = 0; i < nCtr; i++)
+			arNode1[i] = arNode2[i];
+		float fAvgGap = (float)(nWidth - nCtr * NodeWIDTH) / nCtr;
+		for (int i = 0, nGapSum = 0; i < nCtr; i++) {
+			int nGapNow = (int)(fAvgGap / 2 + (NodeWIDTH + fAvgGap) * i);
+			PrintGap(nGapNow - nGapSum);
+			if (arNode1[i])
+				printf("%02d", arNode1[i]->nData);
+			else
+				PrintGap(NodeWIDTH);
+			nGapSum = nGapNow + NodeWIDTH;
+			arNode2[2 * i] = arNode1[i] ? arNode1[i]->lChild : NULL;
+			arNode2[2 * i + 1] = arNode1[i] ? arNode1[i]->rChild : NULL;
+		}
+		putchar('\n');
+	}
+}
+
+int CountNode(TreePtr pTree)
+{
+	int nCtr = 0;
+	if (pTree)
+		nCtr = CountNode(pTree->lChild) + CountNode(pTree->rChild) + 1;
+	return nCtr;
 }

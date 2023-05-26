@@ -7,17 +7,17 @@
 
 typedef struct {
 	int nData;
-	int nOtherData;
 }	Element;
 
 void main()
 {
-	void InsertHeap(Element heap[], Element& anItem, int& n);
-	Element DeleteHeap(Element heap[], int& nCtr);
+	void InsertHeap(Element heap[], Element anItem);
+	void DeleteHeap(Element heap[], Element &anItem);
+	void ShowTree(Element heap[]);
 
 	Element heap[MAX_ELEMENTS + 1];
-	int nCtr = 0;
-	Element item;
+	heap[0].nData = 0;					// node counter
+	Element anItem;
 	srand((unsigned)time(NULL));
 	while (1) {
 		int nMax;
@@ -25,26 +25,29 @@ void main()
 		scanf("%d", &nMax);
 		if (nMax <= 0 || nMax > MAX_ELEMENTS)
 			break;
-		printf("  [Heap 랜덤 삽입]\n");
 		for (int i = 1; i <= nMax; i++) {
-			item.nData = rand() % 1000;
-			printf("    [%02d] %d\n", i, item.nData);
-			InsertHeap(heap, item, nCtr);
+			anItem.nData = rand() % 100;
+			printf("[%02d] <-- %d\n\n", i, anItem.nData);
+			InsertHeap(heap, anItem);
+			ShowTree(heap);
+			putchar('\n');
 		}
-		printf("\n  [Heap 삭제]\n");
+		putchar('\n');
 		for (int i = 1; i <= nMax; i++) {
-			item = DeleteHeap(heap, nCtr);
-			printf("    [%02d] %d\n", i, item.nData);
+			DeleteHeap(heap, anItem);
+			printf("[%02d] --> %d\n\n", i, anItem.nData);
+			ShowTree(heap);
+			putchar('\n');
 		}
 		putchar('\n');
 	}
 }
 
-void InsertHeap(Element heap[], Element& anItem, int& nCtr)
+void InsertHeap(Element heap[], Element anItem)
 {
 	/***
 	nNdx에 nCtr을 1 증가한 후 저장한다;
-	while (nNdx가 1보다 크고  anItem의 데이커가 [nNdx / 2]의 데이터보다 크다) {
+	while (nNdx가 1보다 크고  anItem의 데이터가 [nNdx / 2]의 데이터보다 크다) {
 		부모의 데이터를 자식으로 내린다
 		nNdx를 한 레벨 위로 올린다
 	}
@@ -52,9 +55,8 @@ void InsertHeap(Element heap[], Element& anItem, int& nCtr)
 	***/
 }
 
-Element DeleteHeap(Element heap[], int& nCtr)
+void DeleteHeap(Element heap[], Element& anItem)
 {
-	Element anItem;
 	/***
 	anItem에 루트 데이터를 저장한다
 	lastItem에 마지막 데이터를 저장하고 nCtr을 1 감소한다
@@ -62,14 +64,65 @@ Element DeleteHeap(Element heap[], int& nCtr)
 	while (child가 nCtr보다 작거나 같다) {
 		if (child가 nCtr보다 작고 [child]의 데이터가 [child + 1]의 데이터보다 작다)
 			child를 1 증가한다
-		if (lastItem의 데이터가 [child]의 데이터보다 커거나 같다)
+		if (lastItem의 데이터가 [child]의 데이터보다 크거나 같다)
 			break;
 		[parent]의 데이터에 [child]의 데이터를 저장한다
 		parent에 child를 저장한다
 		child에 2를 곱한다
 	}
 	[parent]에 lastItem을 저장한다
-	anItem을 반환한다
 	***/
-	return anItem;
+}
+
+#define	NodeWIDTH	2
+#define	NodeGAP		1
+
+void PrintGap(int nCtr)
+{
+	for (int i = 0; i < nCtr; i++)
+		putchar(0x20);
+}
+char* PrintData(int nData)
+{
+	static char sData[6];
+	sprintf(sData, "%05d", nData);
+	return sData + 5 - NodeWIDTH;
+}
+
+int TreeHeight(Element heap[], int nNdx)
+{
+	int nHeight = 0;
+	int nCtr = heap[0].nData;
+	if (nNdx <= nCtr) {
+		int nlHeight = TreeHeight(heap, 2 * nNdx);
+		int nrHeight = TreeHeight(heap, 2 * nNdx + 1);
+		nHeight = (nlHeight > nrHeight ? nlHeight : nrHeight) + 1;
+	}
+	return nHeight;
+}
+
+void ShowTree(Element heap[])
+{
+	int nCtr;
+	if ((nCtr = heap[0].nData) == 0)
+		return;
+	int nHeight = TreeHeight(heap, 1);
+	int nMaxLvlNode = 1;
+	for (int i = 1; i < nHeight; i++)
+		nMaxLvlNode *= 2;
+	int nWidth = (NodeWIDTH + NodeGAP) * nMaxLvlNode;
+	int nNdx, nLvlCtr;
+	nNdx = nLvlCtr = 1;
+	while (nNdx <= nCtr) {
+		float fAvgGap = (float)(nWidth - nLvlCtr * NodeWIDTH) / nLvlCtr;
+		for (int i = 0, nGapSum = 0; i < nLvlCtr; i++, nNdx++) {
+			int nGapNow = (int)(fAvgGap / 2 + (NodeWIDTH + fAvgGap) * i);
+			PrintGap(nGapNow - nGapSum);
+			if (nNdx <= nCtr)
+				printf(PrintData(heap[nNdx].nData));
+			nGapSum = nGapNow + NodeWIDTH;
+		}
+		nLvlCtr *= 2;
+		putchar('\n');
+	}
 }
