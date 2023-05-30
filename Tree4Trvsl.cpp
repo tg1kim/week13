@@ -4,26 +4,29 @@
 #include <string.h>
 #pragma warning(disable: 4326 4996 6001 6031)
 
-#define TESTING			// define for testing
+#define	NodeWIDTH	1
+#define	NodeGAP		1
+
+//#define TESTING			// define for testing
 #ifdef TESTING
-#define NoNODE	11
+#define NoNODE		11
 #else
-#define NoNODE	26
+#define NoNODE		26
 #endif
 
-typedef char* CharPtr;
-typedef struct node {
-	char	nData;
-	struct node *lChild;
-	struct node *rChild;
-}	Node, *NodePtr, *TreePtr;
+typedef char* CPtr;
+typedef struct Node {
+	char  nData;
+	Node *lChild;
+	Node *rChild;
+}	*NodePtr, *TreePtr;
 
 int  MakeTree(TreePtr &pTree, int nData);
-void PreorderTrvs(TreePtr pTree, CharPtr &sOrder);
-void InorderTrvs(TreePtr pTree, CharPtr &sOrder);
-void PostorderTrvs(TreePtr pTree, CharPtr &sOrder);
-TreePtr Tree4InPreorder(char *sInorder, char *sPreorder, int nCtr);
-TreePtr Tree4InPostorder(char *sInorder, char *sPostorder, int nCtr);
+void PreorderTrvs(TreePtr pTree, CPtr &sOrder);
+void InorderTrvs(TreePtr pTree, CPtr &sOrder);
+void PostorderTrvs(TreePtr pTree, CPtr &sOrder);
+TreePtr Tree4InPreorder(char* pLDR, char* pDLR, int nCtr);
+TreePtr Tree4InPostorder(char* pLDT, char* pLRD, int nCtr);
 bool EqualTree(TreePtr pTree1, TreePtr pTree2);
 void FreeTree(TreePtr pTree);
 void ShowTree(TreePtr pTree);
@@ -90,24 +93,24 @@ int MakeTree(TreePtr& pTree, int nData)
 	return MakeTree(nChild ? pTree->lChild : pTree->rChild, nData);
 }
 
-void PreorderTrvs(TreePtr pTree, CharPtr& sOrder)
+void PreorderTrvs(TreePtr pTree, CPtr &sOrder)
 {	// 전위 순회를 하여 sOrder에 저장한다
 }
 
-void InorderTrvs(TreePtr pTree, CharPtr& sOrder)
+void InorderTrvs(TreePtr pTree, CPtr &sOrder)
 {	// 중위 순회를 하여 sOrder에 저장한다
 }
 
-void PostorderTrvs(TreePtr pTree, CharPtr& sOrder)
+void PostorderTrvs(TreePtr pTree, CPtr &sOrder)
 {	// 후위 순회를 하여 sOrder에 저장한다
 }
 
-TreePtr Tree4InPreorder(char *sInorder, char *sPreorder, int nCtr)
+TreePtr Tree4InPreorder(char *pLDR, char *pDLR, int nCtr)
 {
 	return NULL;
 }
 
-TreePtr Tree4InPostorder(char *sInorder, char *sPostorder, int nCtr)
+TreePtr Tree4InPostorder(char *pLDR, char *pLRD, int nCtr)
 {
 	return NULL;
 }
@@ -134,13 +137,16 @@ int CountNode(TreePtr pTree)
 	return nCtr;
 }
 
-#define	NodeWIDTH	1
-#define	NodeGAP		1
-
 void PrintGap(int nCtr)
 {
 	for (int i = 0; i < nCtr; i++)
 		putchar(0x20);
+}
+
+void PrintData(int nData)
+{
+	static char strFmt[] = { '%', 0x30 + NodeWIDTH, 'c', 0 };
+	printf(strFmt, nData);
 }
 
 int TreeHeight(TreePtr pTree)
@@ -171,10 +177,7 @@ void ShowTree(TreePtr pTree)
 		for (int i = 0, nGapSum = 0; i < nCtr; i++) {
 			int nGapNow = (int)(fAvgGap / 2 + (NodeWIDTH + fAvgGap) * i);
 			PrintGap(nGapNow - nGapSum);
-			if (arNode1[i])
-				printf("%c", arNode1[i]->nData);
-			else
-				PrintGap(NodeWIDTH);
+			arNode1[i] ? PrintData(arNode1[i]->nData) : PrintGap(NodeWIDTH);
 			nGapSum = nGapNow + NodeWIDTH;
 			arNode2[2 * i] = arNode1[i] ? arNode1[i]->lChild : NULL;
 			arNode2[2 * i + 1] = arNode1[i] ? arNode1[i]->rChild : NULL;
