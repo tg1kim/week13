@@ -3,20 +3,22 @@
 #include <time.h>
 #pragma warning(disable: 4326 4996 6001 6031 28182)
 
+#define	NodeWIDTH	2
+#define	NodeGAP		1
 //#define DebugON			// define for testing
 #ifdef DebugON
-#define NoNODE	7
+#define NoNODE		7
 #else
-#define NoNODE	23
+#define NoNODE		23
 #endif
 
-typedef struct node {
+typedef struct Node {
 	int	nData;
 	unsigned char lThread : 1;
 	unsigned char rThread : 1;
-	struct node *lChild;
-	struct node *rChild;
-}	Node, *NodePtr, *TreePtr;
+	Node *lChild;
+	Node *rChild;
+}	*NodePtr, *TreePtr;
 
 int  MakeTree(TreePtr& pTree, int nData);
 void InorderTrvs(TreePtr pTree, NodePtr* &sOrder);
@@ -78,9 +80,7 @@ int MakeTree(TreePtr& pTree, int nData)
 	}
 	int nlCtr = CountNode(pTree->lChild), nrCtr = CountNode(pTree->rChild);
 	int nChild = nlCtr == nrCtr ? rand() % 2 : nlCtr > nrCtr;
-	if (nChild == 0)
-		return MakeTree(pTree->lChild, nData);
-	return MakeTree(pTree->rChild, nData);
+	return nChild ? MakeTree(pTree->rChild, nData) : MakeTree(pTree->lChild, nData);
 }
 
 void InorderTrvs(TreePtr pTree, NodePtr*& parNode)
@@ -142,13 +142,16 @@ void FreeTree(TreePtr pTree)
 	}
 }
 
-#define	NodeWIDTH	2
-#define	NodeGAP		1
-
 void PrintGap(int nCtr)
 {
 	for (int i = 0; i < nCtr; i++)
 		putchar(0x20);
+}
+
+void PrintData(int nData)
+{
+	static char strFmt[] = { '%', '0', 0x30 + NodeWIDTH, 'd', 0 };
+	printf(strFmt, nData);
 }
 
 int TreeHeight(TreePtr pTree)
@@ -179,10 +182,7 @@ void ShowTree(TreePtr pTree)
 		for (int i = 0, nGapSum = 0; i < nCtr; i++) {
 			int nGapNow = (int)(fAvgGap / 2 + (NodeWIDTH + fAvgGap) * i);
 			PrintGap(nGapNow - nGapSum);
-			if (arNode1[i])
-				printf("%02d", arNode1[i]->nData);
-			else
-				PrintGap(NodeWIDTH);
+			arNode1[i] ? PrintData(arNode1[i]->nData) : PrintGap(NodeWIDTH);
 			nGapSum = nGapNow + NodeWIDTH;
 			arNode2[2 * i] = arNode1[i] ? arNode1[i]->lChild : NULL;
 			arNode2[2 * i + 1] = arNode1[i] ? arNode1[i]->rChild : NULL;
